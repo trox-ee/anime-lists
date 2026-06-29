@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A beautifully animated interactive timeline of anime watched, featuring series and movies with reviews and completion dates.">
+    <title>Anime Journey — Timeline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════
+           DESIGN TOKENS & RESET
+           Inspired by opl-master-22 dark theme
+        ═══════════════════════════════════════════ */
+        :root {
+            --bg-primary: #0d0d14;
+            --bg-secondary: #13131f;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #22223a;
+            --surface-elevated: #252540;
+            --accent-green: #00d4aa;
+            --accent-green-dim: #00b894;
+            --accent-teal: #00cec9;
+            --accent-purple: #6c5ce7;
+            --accent-purple-light: #a29bfe;
+            --accent-pink: #e84393;
+            --accent-blue: #0984e3;
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6b6b80;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 212, 170, 0.3);
+            --glow-green: rgba(0, 212, 170, 0.15);
+            --glow-purple: rgba(108, 92, 231, 0.15);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 8px 40px rgba(0, 0, 0, 0.6);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'Space Grotesk', 'Inter', sans-serif;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-green);
+            border-radius: 3px;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ═══════════════════════════════════════════
+           AURORA BACKGROUND (from reference)
+        ═══════════════════════════════════════════ */
+        .aurora-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .aurora-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 140%;
+            height: 100%;
+            background: radial-gradient(ellipse at 30% 0%, rgba(108, 92, 231, 0.18) 0%, transparent 60%),
+                        radial-gradient(ellipse at 70% 0%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 0%, rgba(232, 67, 147, 0.08) 0%, transparent 40%);
+            animation: auroraShift 12s ease-in-out infinite alternate;
+        }
+
+        .aurora-bg::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            left: 10%;
+            width: 80%;
+            height: 60%;
+            background: radial-gradient(ellipse at 50% 20%, rgba(108, 92, 231, 0.12) 0%, transparent 70%);
+            animation: auroraShift2 15s ease-in-out infinite alternate;
+            filter: blur(60px);
+        }
+
+        @keyframes auroraShift {
+            0% { transform: translateX(0) translateY(0); opacity: 1; }
+            100% { transform: translateX(5%) translateY(-3%); opacity: 0.8; }
+        }
+        @keyframes auroraShift2 {
+            0% { transform: translateX(0) scale(1); }
+            100% { transform: translateX(-8%) scale(1.1); }
+        }
+
+        /* ═══════════════════════════════════════════
+           HEADER
+        ═══════════════════════════════════════════ */
+        .header {
+            position: relative;
+            z-index: 10;
+            padding: 60px 40px 40px;
+            text-align: center;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid rgba(0, 212, 170, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-green) 50%, var(--accent-purple-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .header .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            font-weight: 300;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        /* ═══════════════════════════════════════════
+           STATS BAR
+        ═══════════════════════════════════════════ */
+        .stats-bar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 24px 40px;
+            margin: 0 auto 40px;
+            max-width: 900px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .stat-divider {
+            width: 1px;
+            background: var(--border-subtle);
+            align-self: stretch;
+        }
+
+        /* ═══════════════════════════════════════════
+           FILTER TABS
+        ═══════════════════════════════════════════ */
+        .filter-bar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 40px;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-primary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: var(--glow-green);
+        }
+
+        .filter-btn.active {
+            border-color: var(--accent-green);
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════════
+           TIMELINE CONTAINER
+        ═══════════════════════════════════════════ */
+        .timeline-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 40px 80px;
+        }
+
+        /* Central timeline line */
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom,
+                transparent,
+                var(--accent-green) 5%,
+                var(--accent-green) 95%,
+                transparent
+            );
+            transform: translateX(-50%);
+            opacity: 0.3;
+        }
+
+        .timeline-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                transparent,
+                var(--accent-green),
+                transparent
+            );
+            opacity: 0;
+            animation: lineGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes lineGlow {
+            0%, 100% { opacity: 0; transform: translateX(-50%) translateY(-100%); }
+            50% { opacity: 0.6; transform: translateX(-50%) translateY(100%); }
+        }
+
+        /* ═══════════════════════════════════════════
+           MONTH GROUP
+        ═══════════════════════════════════════════ */
+        .month-group {
+            margin-bottom: 20px;
+        }
+
+        .month-header {
+            position: relative;
+            text-align: center;
+            margin-bottom: 30px;
+            z-index: 2;
+        }
+
+        .month-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-purple-light);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .month-label .month-icon {
+            font-size: 1rem;
+        }
+
+        /* ═══════════════════════════════════════════
+           TIMELINE ENTRIES
+        ═══════════════════════════════════════════ */
+        .timeline-entry {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .timeline-entry.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .timeline-entry.left .entry-content {
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .timeline-entry.right .entry-content {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        /* Timeline node dot */
+        .timeline-node {
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 2px solid var(--accent-green);
+            z-index: 3;
+            transition: var(--transition-spring);
+        }
+
+        .timeline-node::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            transition: var(--transition-fast);
+        }
+
+        .timeline-entry:hover .timeline-node {
+            transform: translateX(-50%) scale(1.4);
+            box-shadow: 0 0 20px var(--accent-green);
+        }
+
+        .timeline-entry:hover .timeline-node::before {
+            background: #fff;
+        }
+
+        /* ═══════════════════════════════════════════
+           ENTRY CARD
+        ═══════════════════════════════════════════ */
+        .entry-content {
+            width: calc(50% - 40px);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .entry-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+            opacity: 0;
+            transition: var(--transition-fast);
+        }
+
+        .entry-content:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-accent);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .entry-content:hover::before {
+            opacity: 1;
+        }
+
+        /* Progress bar inside card (like reference image) */
+        .entry-bar {
+            height: 3px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+            background: var(--surface-elevated);
+            overflow: hidden;
+        }
+
+        .entry-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+            width: 0%;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timeline-entry.visible .entry-bar-fill {
+            width: 100%;
+        }
+
+        .entry-number {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .entry-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin-bottom: 6px;
+            transition: var(--transition-fast);
+        }
+
+        .entry-content:hover .entry-title {
+            color: var(--accent-green);
+        }
+
+        .entry-review {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .entry-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .entry-date svg {
+            width: 12px;
+            height: 12px;
+            opacity: 0.6;
+        }
+
+        .entry-tag {
+            display: inline-flex;
+            padding: 2px 10px;
+            border-radius: 100px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-series {
+            background: rgba(0, 212, 170, 0.12);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 212, 170, 0.2);
+        }
+
+        .tag-movie {
+            background: rgba(108, 92, 231, 0.12);
+            color: var(--accent-purple-light);
+            border: 1px solid rgba(108, 92, 231, 0.2);
+        }
+
+        /* ═══════════════════════════════════════════
+           NO-DATE SECTION
+        ═══════════════════════════════════════════ */
+        .no-date-section {
+            position: relative;
+            z-index: 10;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 40px 80px;
+        }
+
+        .no-date-section .section-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .section-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .grid-entries {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .grid-entry {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            transition: var(--transition-smooth);
+            opacity: 0;
+            transform: translateY(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-entry.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .grid-entry::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+            opacity: 0;
+            transition: var(--transition-fast);
+        }
+
+        .grid-entry:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(108, 92, 231, 0.3);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .grid-entry:hover::before {
+            opacity: 1;
+        }
+
+        .grid-entry .entry-title {
+            font-size: 0.92rem;
+        }
+
+        .grid-entry:hover .entry-title {
+            color: var(--accent-purple-light);
+        }
+
+        /* ═══════════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════════ */
+        .footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .footer p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer .last-updated {
+            color: var(--accent-green);
+            font-weight: 500;
+        }
+
+        /* ═══════════════════════════════════════════
+           ANIMATIONS
+        ═══════════════════════════════════════════ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .header { padding: 40px 20px 30px; }
+            .stats-bar { gap: 20px; padding: 20px; }
+            .stat-value { font-size: 1.5rem; }
+            .filter-bar { padding: 0 20px; }
+            .timeline-container, .no-date-section { padding: 0 20px 60px; }
+
+            .timeline-line {
+                left: 20px;
+            }
+
+            .timeline-node {
+                left: 20px;
+            }
+
+            .timeline-entry.left .entry-content,
+            .timeline-entry.right .entry-content {
+                width: calc(100% - 50px);
+                margin-left: auto;
+                margin-right: 0;
+            }
+
+            .grid-entries {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="aurora-bg"></div>
+
+    <!-- ═══════════════════════════════════════════
+         HEADER
+    ═══════════════════════════════════════════ -->
+    <header class="header" id="header">
+        <div class="header-badge">
+            <span class="dot"></span>
+            <span>Anime Journey</span>
+        </div>
+        <h1>My Anime Timeline</h1>
+        <p class="subtitle">A chronicle of every anime series and movie I've experienced</p>
+    </header>
+
+    <!-- ═══════════════════════════════════════════
+         STATS BAR
+    ═══════════════════════════════════════════ -->
+    <div class="stats-bar" id="stats-bar">
+        <div class="stat-item">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Watched</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-value" id="stat-series">0</div>
+            <div class="stat-label">Series</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-value" id="stat-movies">0</div>
+            <div class="stat-label">Movies</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-value" id="stat-months">0</div>
+            <div class="stat-label">Months Active</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         FILTER BAR
+    ═══════════════════════════════════════════ -->
+    <div class="filter-bar" id="filter-bar">
+        <button class="filter-btn active" data-filter="all" id="filter-all">All</button>
+        <button class="filter-btn" data-filter="series" id="filter-series">Series</button>
+        <button class="filter-btn" data-filter="movie" id="filter-movie">Movies</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         TIMELINE (dated entries)
+    ═══════════════════════════════════════════ -->
+    <section class="timeline-container" id="timeline-container">
+        <div class="timeline-line"></div>
+        <!-- Populated by JS / Python -->
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         UNDATED ENTRIES GRID
+    ═══════════════════════════════════════════ -->
+    <section class="no-date-section" id="no-date-section">
+        <div class="section-header">
+            <h2 class="section-title">Earlier Watches</h2>
+            <p class="section-subtitle">Series & movies without recorded dates — the origins of the journey</p>
+        </div>
+        <div class="grid-entries" id="grid-entries">
+            <!-- Populated by JS / Python -->
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════════ -->
+    <footer class="footer">
+        <p>Last updated: <span class="last-updated" id="last-updated">—</span></p>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════
+         DATA & SCRIPTS
+    ═══════════════════════════════════════════ -->
+    <script>
+    // ─── DATA (injected by Python script) ─────────────────────
+    // FORMAT: { dated: [...], undated: [...], stats: {...}, lastUpdated: "..." }
+    const ANIME_DATA = {"dated": [{"title": "The Fragrant Flower Blooms with Dignity", "review": "", "type": "series", "date": "February 28, 2026", "monthYear": "February 2026", "sortKey": "2026-02-28", "index": 1}, {"title": "White Album 2", "review": "absolute cinema, great screenplay", "type": "series", "date": "April 14, 2026", "monthYear": "April 2026", "sortKey": "2026-04-14", "index": 2}, {"title": "Just Because!", "review": "a bit realistic", "type": "series", "date": "April 16, 2026", "monthYear": "April 2026", "sortKey": "2026-04-16", "index": 3}, {"title": "Wotakoi: Love is Hard for Otaku", "review": "great, ground reality as it progresses", "type": "series", "date": "April 18, 2026", "monthYear": "April 2026", "sortKey": "2026-04-18", "index": 4}, {"title": "Tomo-chan Is a Girl!", "review": "nice okay anime", "type": "series", "date": "April 19, 2026", "monthYear": "April 2026", "sortKey": "2026-04-19", "index": 5}, {"title": "Makeine: Too Many Losing Heroines!", "review": "great animations", "type": "series", "date": "April 20, 2026", "monthYear": "April 2026", "sortKey": "2026-04-20", "index": 6}, {"title": "Ao-chan Can't Study!", "review": "noting good to talk", "type": "series", "date": "April 21, 2026", "monthYear": "April 2026", "sortKey": "2026-04-21", "index": 7}, {"title": "Rent-a-Girlfriend", "review": "nice", "type": "series", "date": "April 25, 2026", "monthYear": "April 2026", "sortKey": "2026-04-25", "index": 8}, {"title": "Akashic Records of Bastard Magic Instructor", "review": "okay", "type": "series", "date": "April 26, 2026", "monthYear": "April 2026", "sortKey": "2026-04-26", "index": 9}, {"title": "Tune In to the Midnight Heart", "review": "okay", "type": "series", "date": "April 28, 2026", "monthYear": "April 2026", "sortKey": "2026-04-28", "index": 10}, {"title": "My Teen Romantic Comedy SNAFU", "review": "Light novel adaptation, with monologues", "type": "series", "date": "May 1, 2026", "monthYear": "May 2026", "sortKey": "2026-05-01", "index": 11}, {"title": "The Quintessential Quintuplets", "review": "Nice anime", "type": "series", "date": "May 4, 2026", "monthYear": "May 2026", "sortKey": "2026-05-04", "index": 12}, {"title": "Maid Sama!", "review": "Nice, fast-paced", "type": "series", "date": "May 9, 2026", "monthYear": "May 2026", "sortKey": "2026-05-09", "index": 13}, {"title": "The Hidden Dungeon Only I Can Enter", "review": "plain, simple harem", "type": "series", "date": "May 9, 2026", "monthYear": "May 2026", "sortKey": "2026-05-09", "index": 14}, {"title": "Medaka Kuroiwa is Impervious to My Charms", "review": "okay", "type": "series", "date": "May 10, 2026", "monthYear": "May 2026", "sortKey": "2026-05-10", "index": 15}, {"title": "I'm Getting Married to a Girl I Hate in My Class", "review": "harem anime", "type": "series", "date": "May 12, 2026", "monthYear": "May 2026", "sortKey": "2026-05-12", "index": 16}, {"title": "I Got a Cheat Skill in Another World and Became Unrivaled in The Real World, Too", "review": "ordinary", "type": "series", "date": "May 13, 2026", "monthYear": "May 2026", "sortKey": "2026-05-13", "index": 17}, {"title": "Oshi No Ko", "review": "super triller", "type": "series", "date": "May 16, 2026", "monthYear": "May 2026", "sortKey": "2026-05-16", "index": 18}, {"title": "The Dangers in My Heart", "review": "Nice", "type": "series", "date": "May 17, 2026", "monthYear": "May 2026", "sortKey": "2026-05-17", "index": 19}, {"title": "Why the Hell are you here, Sensai", "review": "Harem, echhi", "type": "series", "date": "May 17, 2026", "monthYear": "May 2026", "sortKey": "2026-05-17", "index": 20}, {"title": "Saekano: How to Raise a Boring Girlfriend", "review": "Great ending (both)", "type": "series", "date": "May 20, 2026", "monthYear": "May 2026", "sortKey": "2026-05-20", "index": 21}, {"title": "Love is Like a Cocktail", "review": "", "type": "series", "date": "May 20, 2026", "monthYear": "May 2026", "sortKey": "2026-05-20", "index": 22}, {"title": "Komi Can't Communicate", "review": "great animations, nice anime", "type": "series", "date": "May 22, 2026", "monthYear": "May 2026", "sortKey": "2026-05-22", "index": 23}, {"title": "Redo of Healer", "review": "", "type": "series", "date": "May 23, 2026", "monthYear": "May 2026", "sortKey": "2026-05-23", "index": 24}, {"title": "Blue Box", "review": "nice anime", "type": "series", "date": "May 24, 2026", "monthYear": "May 2026", "sortKey": "2026-05-24", "index": 25}, {"title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat", "review": "okay", "type": "series", "date": "May 25, 2026", "monthYear": "May 2026", "sortKey": "2026-05-25", "index": 26}, {"title": "The Misfit of Demon King Academy", "review": "overpowered", "type": "series", "date": "May 25, 2026", "monthYear": "May 2026", "sortKey": "2026-05-25", "index": 27}, {"title": "86", "review": "AOT vibes", "type": "series", "date": "May 28, 2026", "monthYear": "May 2026", "sortKey": "2026-05-28", "index": 28}, {"title": "I Made Friends with the Second Prettiest Girl in My Class", "review": "ordinary nothing special too cliche", "type": "series", "date": "June 13, 2026", "monthYear": "June 2026", "sortKey": "2026-06-13", "index": 29}, {"title": "My Wife is the Student Council President", "review": "ero", "type": "series", "date": "June 13, 2026", "monthYear": "June 2026", "sortKey": "2026-06-13", "index": 30}, {"title": "Farming Life in Another World", "review": "Nice", "type": "series", "date": "June 14, 2026", "monthYear": "June 2026", "sortKey": "2026-06-14", "index": 31}, {"title": "Akane-banashi", "review": "super", "type": "series", "date": "June 20, 2026", "monthYear": "June 2026", "sortKey": "2026-06-20", "index": 32}, {"title": "Witch Hat Atelier", "review": "Nice", "type": "series", "date": "June 24, 2026", "monthYear": "June 2026", "sortKey": "2026-06-24", "index": 33}, {"title": "Marriagetoxin", "review": "okay", "type": "series", "date": "June 24, 2026", "monthYear": "June 2026", "sortKey": "2026-06-24", "index": 34}, {"title": "My Love Story with Yamada—kun at Lv999", "review": "Nice anime", "type": "series", "date": "June 27, 2026", "monthYear": "June 2026", "sortKey": "2026-06-27", "index": 35}, {"title": "Higehiro: After Being Rejected, I Shaved and Took in a High School Runaway", "review": "starts good, but turns into domestic gf", "type": "series", "date": "June 28, 2026", "monthYear": "June 2026", "sortKey": "2026-06-28", "index": 36}, {"title": "Smoking Behind the Supermarket with You", "review": "Nice", "type": "series", "date": "June 29, 2026", "monthYear": "June 2026", "sortKey": "2026-06-29", "index": 37}], "undated": [{"title": "Solo Leveling", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 1}, {"title": "Death Note", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 2}, {"title": "Attack on Titan", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 3}, {"title": "Demon Slayer: Kimetsu no Yaiba", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 4}, {"title": "Jujutsu Kaisen", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 5}, {"title": "One Punch Man", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 6}, {"title": "Naruto", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 7}, {"title": "Chainsaw Man", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 8}, {"title": "Spy x Family", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 9}, {"title": "The Apothecary Diaries", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 10}, {"title": "Horimiya", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 11}, {"title": "Rascal doesn't dream of a Bunny Girl Sempai", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 12}, {"title": "The Eminence in Shadow", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 13}, {"title": "Kaguya-sama: Love Is War", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 14}, {"title": "Frieren - Beyond End's Journey", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 15}, {"title": "Hell's Paradise", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 16}, {"title": "The Angel Next Door Spoils Me Rotten", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 17}, {"title": "Your Lie in April", "review": "musical masterpiece", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 18}, {"title": "Violet Evergarden", "review": "great OST, peace", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 19}, {"title": "Mother of the Goddess' Dormitory", "review": "basic harem", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 20}, {"title": "Domestic Girlfriend", "review": "super plot, truly a gem April 3, 2026", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 21}, {"title": "Scum's Wish", "review": "shitty garbage drum", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 22}, {"title": "Onegai Sensai", "review": "shit", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 23}, {"title": "More than a Married Couple, but Not Lovers", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 24}, {"title": "My Dress-Up Darling", "review": "best female lead", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 25}, {"title": "Alya Sometimes Hides Her Feelings in Russian--okay", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 26}, {"title": "My Stepmom's Daughter Is My Ex", "review": "shallow", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 27}, {"title": "Eromanga Sensei", "review": "bad", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 28}, {"title": "Classroom of the Elite", "review": "", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 29}, {"title": "Yosuga no Sora: In Solitude, Where We Are Least Alone", "review": "ep8 end-credits episode 11", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 30}, {"title": "Days with My Stepsister", "review": "realistic", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 31}, {"title": "Netsuzou Trap", "review": "absolute shit", "type": "series", "date": "", "monthYear": "", "sortKey": "", "index": 32}, {"title": "Your Name", "review": "super movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 33}, {"title": "A Silent Voice", "review": "great movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 34}, {"title": "I want to Eat Your Pancreas", "review": "Nice movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 35}, {"title": "Suzume", "review": ".", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 36}, {"title": "Tamako-Love story", "review": "peaceful story", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 37}, {"title": "weathering with You", "review": "great rain animations", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 38}, {"title": "The Garden of Words", "review": "best music and great songs", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 39}, {"title": "Josee, the Tiger and the Fish", "review": "thriller, great movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 40}, {"title": "5 Centimeters per Second", "review": "Sad, love story", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 41}, {"title": "The Tunnel to Summer, the Exit of Goodbyes--Okay movie", "review": "", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 42}, {"title": "A Whisker Away", "review": "Kids movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 43}, {"title": "Words Bubble Up Like Soda Pop", "review": "Nice ending", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 44}, {"title": "Her Blue Sky", "review": "Nice ending", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 45}, {"title": "Whisper of the Heart", "review": "Too idealistic", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 46}, {"title": "The Girl Who Leapt Through Time", "review": "Nice movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 47}, {"title": "Into the Forest of Fireflies' Light", "review": "Nice movie", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 48}, {"title": "The Wind Rises", "review": "Okay biography", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 49}, {"title": "Hello World", "review": "Kids movie, poor emotions", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 50}, {"title": "To Every You I've Loved Before", "review": "confusing", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 51}, {"title": "To Me, The One Who Loved You", "review": "great continuation", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 52}, {"title": "Ride Your Wave", "review": "ordinary love-story", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 53}, {"title": "The Anthem of the Heart", "review": "great, Authentic", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 54}, {"title": "From Up on Poppy Hill", "review": "good", "type": "movie", "date": "", "monthYear": "", "sortKey": "", "index": 55}], "stats": {"total": 92, "series": 69, "movies": 23, "months": 4}, "lastUpdated": "June 29, 2026 at 05:56 PM"};
+
+    // ─── MONTH NAMES & ICONS ──────────────────────────────────
+    const MONTH_NAMES = [
+        'January','February','March','April','May','June',
+        'July','August','September','October','November','December'
+    ];
+    const MONTH_ICONS = ['❄️','💖','🌸','🌷','🌿','☀️','🎆','🌅','🍂','🎃','🍁','🎄'];
+
+    // ─── RENDER STATS ─────────────────────────────────────────
+    function animateCounter(el, target) {
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 40));
+        const interval = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                current = target;
+                clearInterval(interval);
+            }
+            el.textContent = current;
+        }, 30);
+    }
+
+    function renderStats() {
+        const s = ANIME_DATA.stats;
+        setTimeout(() => animateCounter(document.getElementById('stat-total'), s.total), 600);
+        setTimeout(() => animateCounter(document.getElementById('stat-series'), s.series), 800);
+        setTimeout(() => animateCounter(document.getElementById('stat-movies'), s.movies), 1000);
+        setTimeout(() => animateCounter(document.getElementById('stat-months'), s.months), 1200);
+        document.getElementById('last-updated').textContent = ANIME_DATA.lastUpdated;
+    }
+
+    // ─── RENDER TIMELINE ──────────────────────────────────────
+    function renderTimeline(filter = 'all') {
+        const container = document.getElementById('timeline-container');
+        // keep timeline line
+        container.innerHTML = '<div class="timeline-line"></div>';
+
+        // Group dated by month-year
+        let filtered = ANIME_DATA.dated;
+        if (filter !== 'all') filtered = filtered.filter(e => e.type === filter);
+
+        const groups = {};
+        filtered.forEach(entry => {
+            const key = entry.monthYear || 'Unknown';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(entry);
+        });
+
+        let entryIndex = 0;
+        Object.keys(groups).forEach(monthYear => {
+            // Month header
+            const mh = document.createElement('div');
+            mh.className = 'month-group';
+
+            const parts = monthYear.split(' ');
+            const monthName = parts[0];
+            const monthIdx = MONTH_NAMES.indexOf(monthName);
+            const icon = monthIdx >= 0 ? MONTH_ICONS[monthIdx] : '📅';
+
+            mh.innerHTML = `
+                <div class="month-header">
+                    <span class="month-label">
+                        <span class="month-icon">${icon}</span>
+                        ${monthYear}
+                    </span>
+                </div>
+            `;
+
+            groups[monthYear].forEach(entry => {
+                const side = entryIndex % 2 === 0 ? 'left' : 'right';
+                const el = document.createElement('div');
+                el.className = `timeline-entry ${side}`;
+                el.dataset.type = entry.type;
+                el.dataset.index = entryIndex;
+
+                const tagClass = entry.type === 'movie' ? 'tag-movie' : 'tag-series';
+                const tagLabel = entry.type === 'movie' ? 'Movie' : 'Series';
+                const reviewHtml = entry.review ? `<div class="entry-review">"${entry.review}"</div>` : '';
+
+                el.innerHTML = `
+                    <div class="timeline-node"></div>
+                    <div class="entry-content">
+                        <div class="entry-bar"><div class="entry-bar-fill"></div></div>
+                        <div class="entry-number">#${entry.index}</div>
+                        <div class="entry-title">${entry.title}</div>
+                        ${reviewHtml}
+                        <div class="entry-meta">
+                            <div class="entry-date">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                ${entry.date}
+                            </div>
+                            <span class="entry-tag ${tagClass}">${tagLabel}</span>
+                        </div>
+                    </div>
+                `;
+
+                mh.appendChild(el);
+                entryIndex++;
+            });
+
+            container.appendChild(mh);
+        });
+
+        // Trigger scroll animations
+        observeEntries();
+    }
+
+    // ─── RENDER UNDATED GRID ──────────────────────────────────
+    function renderGrid(filter = 'all') {
+        const container = document.getElementById('grid-entries');
+        container.innerHTML = '';
+
+        let filtered = ANIME_DATA.undated;
+        if (filter !== 'all') filtered = filtered.filter(e => e.type === filter);
+
+        if (filtered.length === 0) {
+            document.getElementById('no-date-section').style.display = 'none';
+            return;
+        }
+        document.getElementById('no-date-section').style.display = '';
+
+        filtered.forEach((entry, i) => {
+            const el = document.createElement('div');
+            el.className = 'grid-entry';
+            el.dataset.type = entry.type;
+            el.style.transitionDelay = `${i * 0.05}s`;
+
+            const tagClass = entry.type === 'movie' ? 'tag-movie' : 'tag-series';
+            const tagLabel = entry.type === 'movie' ? 'Movie' : 'Series';
+            const reviewHtml = entry.review ? `<div class="entry-review">"${entry.review}"</div>` : '';
+
+            el.innerHTML = `
+                <div class="entry-number">#${entry.index}</div>
+                <div class="entry-title">${entry.title}</div>
+                ${reviewHtml}
+                <div class="entry-meta">
+                    <span class="entry-tag ${tagClass}">${tagLabel}</span>
+                </div>
+            `;
+
+            container.appendChild(el);
+        });
+
+        observeGridEntries();
+    }
+
+    // ─── SCROLL OBSERVER ──────────────────────────────────────
+    function observeEntries() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.timeline-entry').forEach(el => observer.observe(el));
+    }
+
+    function observeGridEntries() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.grid-entry').forEach(el => observer.observe(el));
+    }
+
+    // ─── FILTER BUTTONS ──────────────────────────────────────
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+            renderTimeline(filter);
+            renderGrid(filter);
+        });
+    });
+
+    // ─── INIT ─────────────────────────────────────────────────
+    renderStats();
+    renderTimeline();
+    renderGrid();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+**Anime movies Watched**
+
+* Your Name ----------------------------------super movie
+* A Silent Voice------------------------------great movie
+* I want to Eat Your Pancreas-----------------Nice movie
+* Suzume--------------------------------------.
+* Tamako-Love story---------------------------peaceful story
+* weathering with You-------------------------great rain animations
+* The Garden of Words-------------------------best music and great songs
+* Josee, the Tiger and the Fish---------------thriller, great movie
+* 5 Centimeters per Second--------------------Sad, love story
+* The Tunnel to Summer, the Exit of Goodbyes--Okay movie
+* A Whisker Away------------------------------Kids movie
+* Words Bubble Up Like Soda Pop---------------Nice ending
+* Her Blue Sky--------------------------------Nice ending
+* Whisper of the Heart------------------------Too idealistic
+* The Girl Who Leapt Through Time-------------Nice movie
+* Into the Forest of Fireflies' Light---------Nice movie
+* The Wind Rises------------------------------Okay biography
+* Hello World---------------------------------Kids movie, poor emotions
+* To Every You I've Loved Before--------------confusing
+* To Me, The One Who Loved You----------------great continuation
+* Ride Your Wave------------------------------ordinary love-story
+* The Anthem of the Heart---------------------great, Authentic
+* From Up on Poppy Hill-----------------------good
