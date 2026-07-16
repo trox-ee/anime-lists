@@ -1,0 +1,14 @@
+Awesome! Your code is now fully uploaded and I've configured it to host automatically.
+
+Your website will be live at: https://trox-ee.github.io/anime-lists/ 🎉
+
+(Note: It usually takes about 1–3 minutes for GitHub Pages to complete the very first build and make the site live. If you see a 404 page right now, just wait a minute and refresh the page!)
+
+Also, your source code is now safely backed up in a public repository here: https://github.com/trox-ee/anime-lists
+
+In the future, whenever you make changes to your code, you can update the live website by opening a terminal in this folder and running these commands:
+
+bash
+git add .
+git commit -m "Update website"
+git push
